@@ -3,26 +3,24 @@ const {
   Model
 } = require('sequelize')
 module.exports = (sequelize, DataTypes) => {
-  class Exchange extends Model {
+  class StockGroup extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
     static associate (models) {
-      Exchange.hasMany(models.StockGroup, { foreignKey: 'exchangeId' })
+      StockGroup.belongsTo(models.Exchange, { foreignKey: 'exchangeId' })
     }
   };
-  Exchange.init({
-    abbrev: DataTypes.STRING,
-    nameChn: DataTypes.STRING,
-    nameEng: DataTypes.STRING,
-    nameJpn: DataTypes.STRING
+  StockGroup.init({
+    name: DataTypes.STRING,
+    groupCode: DataTypes.STRING
   }, {
     sequelize,
-    modelName: 'Exchange',
-    tableName: 'Exchanges',
+    modelName: 'StockGroup',
+    tableName: 'Stock_Groups',
     underscored: true
   })
-  return Exchange
+  return StockGroup
 }
