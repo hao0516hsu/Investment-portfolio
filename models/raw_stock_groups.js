@@ -3,7 +3,7 @@ const {
   Model
 } = require('sequelize')
 module.exports = (sequelize, DataTypes) => {
-  class RawStockGroups extends Model {
+  class RawStockGroup extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -13,16 +13,16 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
   };
-  RawStockGroups.init({
-    name: DataTypes.STRING,
+  RawStockGroup.init({
+    groupName: DataTypes.STRING,
     groupCode: DataTypes.STRING,
     beginDate: DataTypes.DATE,
     endDate: DataTypes.DATE
   }, {
     sequelize,
-    modelName: 'RawStockGroups',
+    modelName: 'RawStockGroup',
     tableName: 'Raw_stock_groups',
     underscored: true
   })
-  return RawStockGroups
+  return RawStockGroup
 }

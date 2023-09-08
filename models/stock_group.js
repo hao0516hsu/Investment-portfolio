@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   };
   StockGroup.init({
-    name: DataTypes.STRING,
+    groupName: DataTypes.STRING,
     groupCode: DataTypes.STRING
   }, {
     sequelize,
