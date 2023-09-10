@@ -11,11 +11,14 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate (models) {
       StockGroup.belongsTo(models.Exchange, { foreignKey: 'exchangeId' })
+      StockGroup.hasMany(models.Stock, { foreignKey: 'groupId' })
+      StockGroup.hasMany(models.RawStock, { foreignKey: 'groupId' })
     }
   };
   StockGroup.init({
     groupName: DataTypes.STRING,
-    groupCode: DataTypes.STRING
+    groupCode: DataTypes.STRING,
+    isTarget: DataTypes.BOOLEAN
   }, {
     sequelize,
     modelName: 'StockGroup',

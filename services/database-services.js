@@ -1,10 +1,13 @@
 // 引入Models
-const { sequelize, RawStockGroup, StockGroup, Exchange } = require('../models')
+const { sequelize, Exchange, RawStockGroup, StockGroup, RawStock } = require('../models')
 const { Op } = require('sequelize')
 // puppeteer: 模擬抓資料的套件
 const puppeteer = require('puppeteer')
 // chromium: 模擬Chrome的套件
 const chromium = require('chromium')
+// axios: 抓API
+const axios = require('axios')
+// date
 const date = new Date()
 
 const currentDay = String(date.getDate()).padStart(2, '0')
@@ -48,6 +51,7 @@ const databaseServices = {
       return await panelButtons
     })()
   },
+  // RawStockGroups CRUD
   createRawStockGroups: data => {
     // 新增段
     // 逐筆搜尋資料庫是否有該筆資料
@@ -102,6 +106,7 @@ const databaseServices = {
           .catch(err => console.error(err))
       })
   },
+  // RawStockGroups Derives To StockGroups
   deriveToStockGroup: () => {
     const addDataSubquery = 'select group_name from stock_groups'
     const removeDataSubquery = `select group_name from raw_stock_groups where date(updated_at) = "${currentDate}"`
@@ -159,6 +164,121 @@ const databaseServices = {
         ))
       })
       .then(msg => console.log(msg))
+  },
+  // 抓raw_stock資料
+  rawStocks: async () => {
+    const stocks = {}
+    const targetUrls = []
+    const TIMEOUT = 4000
+
+    await StockGroup.findAll({
+      attributes: ['id', 'groupName', 'groupCode'],
+      where: { isTarget: true },
+      raw: true
+    })
+      .then(stockGroups => {
+        // 設定抓資料的清單
+        stockGroups.forEach(stockGroup => {
+          const TARGET_URL = `https://www.twse.com.tw/rwd/zh/api/codeFilters?filter=${stockGroup.groupCode}`
+          const group = {
+            groupUrl: TARGET_URL,
+            groupId: stockGroup.id
+          }
+          return targetUrls.push(group)
+        })
+        return stockGroups
+      })
+    // 依序抓資料，用setTimeout避免被判定為DDoS
+    for (let index = 0; index < targetUrls.length; index++) {
+      await new Promise(resolve => {
+        setTimeout(() => {
+          const result = targetUrls[index]
+          console.log(result)
+          // stocks[index] = result
+          axios.get(targetUrls[index].groupUrl)
+            .then(body => body.data.result)
+            .then(stocksData => {
+              stocks[`${result.groupId}`] = stocksData
+              resolve()
+            })
+            .catch(err => {
+              console.log(err)
+              resolve()
+            })
+        }, TIMEOUT)
+      })
+    }
+
+    return stocks
+  },
+  // RawStock CRUD
+  createRawStock: async data => {
+    const dataKeys = Object.keys(data)
+    const dataValues = Object.values(data)
+    const dataExtracted = []
+
+    // 資料處理段
+    console.log('================== Data extracting ==================')
+
+    for (let i = 0; i < dataValues.length; i++) {
+      for (let j = 0; j < dataValues[i].length; j++) {
+        const dataSplit = dataValues[i][j].split('\t')
+        dataSplit.push(Number(dataKeys[i]))
+
+        dataExtracted.push({
+          tradeCode: dataSplit[0],
+          name: dataSplit[1],
+          groupId: dataSplit[2]
+        })
+      }
+    }
+    // 新增段
+    console.log('================== Data adding ==================')
+    await dataExtracted.map(stock => {
+      return RawStock.findOne({
+        where: { tradeCode: stock.tradeCode, name: stock.name },
+        raw: true
+      })
+        .then(stockInfo => {
+          if (stockInfo) return `Data [ ${stockInfo.tradeCode} - ${stockInfo.name} ] remains unchanged.`
+
+          return RawStock.create({
+            tradeCode: stock.tradeCode,
+            name: stock.name,
+            groupId: stock.groupId,
+            beginDate: currentDate,
+            endDate: '2999-12-31'
+          })
+        })
+        .then(msg => (typeof (msg) === 'object') ? console.log(`Data [ ${msg.toJSON().tradeCode} - ${msg.toJSON().name} ] is added.`) : console.log(msg))
+    })
+
+    // 剔除段
+    console.log('================== Data removing ==================')
+    await RawStock.findAll({
+      where: {
+        beginDate: {
+          [Op.lte]: date
+        },
+        endDate: {
+          [Op.gt]: date
+        }
+      }
+    })
+      .then(stockList => {
+        Promise.all(
+          stockList.map(item => {
+            // 若DB資料且抓檔也有資料,不處理
+            if (dataExtracted.some(x => x.tradeCode === item.toJSON().tradeCode)) return `Data [ ${item.tradeCode} - ${item.name} ] remains unchanged.`
+            // 若DB有資料且抓檔沒有資料,更新結束日
+            return item.update({
+              endDate: new Date()
+            })
+          })
+        )
+          .then(msg => console.log(msg))
+          .catch(err => console.error(err))
+      })
   }
 }
 

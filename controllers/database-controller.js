@@ -7,6 +7,10 @@ const databaseController = {
   },
   deriveToStockGroup: () => {
     databaseServices.deriveToStockGroup()
+  },
+  rawStocks: () => {
+    databaseServices.rawStocks()
+      .then(rawStocks => databaseServices.createRawStock(rawStocks))
   }
 }
 
