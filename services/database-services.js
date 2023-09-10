@@ -1,5 +1,5 @@
 // 引入Models
-const { sequelize, Exchange, RawStockGroup, StockGroup, RawStock } = require('../models')
+const { sequelize, Exchange, RawStockGroup, StockGroup, RawStock, Stock } = require('../models')
 const { Op } = require('sequelize')
 // puppeteer: 模擬抓資料的套件
 const puppeteer = require('puppeteer')
@@ -279,6 +279,54 @@ const databaseServices = {
           .then(msg => console.log(msg))
           .catch(err => console.error(err))
       })
+  },
+  // RawStock Derives To Stock
+  deriveToStocks: async () => {
+    const addDataSubquery = 'select trade_code from stocks'
+    const updateDataSubquery = `select id from raw_stocks where date(updated_at) = '${currentDate}' and end_date != '2999-12-31'`
+
+    // Add Data To Stock
+    await Promise.all([
+      RawStock.findAll({
+        where: {
+          tradeCode: {
+            [Op.notIn]: sequelize.literal(`(${addDataSubquery})`)
+          },
+          $and: sequelize.where(sequelize.fn('date', sequelize.col('updated_at')), '=', currentDate),
+          groupId: { [Op.notIn]: [26, 34] }
+        },
+        raw: true
+      })
+    ])
+      .then(([createData]) => {
+        if (!createData.length) return 'No data has been added to the Stock table.'
+
+        return createData.map(item => (
+          Stock.create({
+            id: item.id,
+            tradeCode: item.tradeCode,
+            name: item.name,
+            isListed: 1,
+            groupId: item.groupId
+          })
+        ))
+      })
+      .then(msg => console.log(msg))
+
+    // Update Data To Stock
+    await Promise.all([
+      Stock.findAll({
+        where: {
+          id: { [Op.in]: sequelize.literal(`(${updateDataSubquery})`) }
+        }
+      })
+    ])
+      .then(([updateData]) => {
+        if (!updateData.length) return 'No data has been updated from Stock table.'
+
+        return updateData.map(item => item.update({ isListed: 0 }))
+      })
+      .then(msg => console.log(msg))
   }
 }
 

@@ -11,6 +11,9 @@ const databaseController = {
   rawStocks: () => {
     databaseServices.rawStocks()
       .then(rawStocks => databaseServices.createRawStock(rawStocks))
+  },
+  deriveToStocks: () => {
+    databaseServices.deriveToStocks()
   }
 }
 
