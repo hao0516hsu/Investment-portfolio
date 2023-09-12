@@ -1,5 +1,5 @@
 // 引入Models
-const { sequelize, Exchange, RawStockGroup, StockGroup, RawStock, Stock } = require('../models')
+const { sequelize, Exchange, RawStockGroup, StockGroup, RawStock, Stock, RawPrice } = require('../models')
 const { Op } = require('sequelize')
 // puppeteer: 模擬抓資料的套件
 const puppeteer = require('puppeteer')
@@ -14,6 +14,16 @@ const currentDay = String(date.getDate()).padStart(2, '0')
 const currentMonth = String(date.getMonth() + 1).padStart(2, '0')
 const currentYear = date.getFullYear()
 const currentDate = `${currentYear}-${currentMonth}-${currentDay}`
+const currentDateForAPI = `${currentYear}${currentMonth}${currentDay}`
+const currentDateTW = `${currentYear - 1911}/${currentMonth}/${currentDay}`
+// convert currency string to number
+function currencyStringToNumber (string) {
+  return Number(string.replace(/[^0-9.-]+/g, ''))
+}
+
+function priceConverter (price) {
+  return (price === '--') ? null : price
+}
 
 const databaseServices = {
   // 抓raw_stock_groups資料
@@ -25,7 +35,7 @@ const databaseServices = {
     return (async () => {
       // 啟動模擬瀏覽器
       const browser = await puppeteer.launch({
-        headless: false,
+        headless: true,
         executablePath: chromium.path
       })
       // 開啟新分頁
@@ -109,7 +119,7 @@ const databaseServices = {
   // RawStockGroups Derives To StockGroups
   deriveToStockGroup: () => {
     const addDataSubquery = 'select group_name from stock_groups'
-    const removeDataSubquery = `select group_name from raw_stock_groups where date(updated_at) = "${currentDate}"`
+    const removeDataSubquery = `select id from raw_stock_groups where begin_date <= "${currentDate}" and end_date > "${currentDate}"`
     // Add Data To Stock_Group
     Promise.all([
       Exchange.findAll({
@@ -134,6 +144,7 @@ const databaseServices = {
 
         return createData.map(item => (
           StockGroup.create({
+            id: item.id,
             groupName: item.groupName,
             groupCode: item.groupCode,
             exchangeId: exchangeId[0].id
@@ -145,22 +156,15 @@ const databaseServices = {
     // Remove Data From Stock_Group
     Promise.all([
       StockGroup.findAll({
-        attributes: ['groupName', 'groupCode'],
-        where: {
-          groupName: {
-            [Op.notIn]: sequelize.literal(`(${removeDataSubquery})`)
-          }
-        },
-        raw: true
+        // attributes: ['groupName', 'groupCode'],
+        where: { id: { [Op.notIn]: sequelize.literal(`(${removeDataSubquery})`) } }
       })]
     )
       .then(([deleteData]) => {
         if (!deleteData.length) return 'No data has been removed from Stock_group table.'
 
         return deleteData.map(item => (
-          StockGroup.destroy({
-            where: { groupName: item.groupName }
-          })
+          item.destroy()
         ))
       })
       .then(msg => console.log(msg))
@@ -293,7 +297,7 @@ const databaseServices = {
             [Op.notIn]: sequelize.literal(`(${addDataSubquery})`)
           },
           $and: sequelize.where(sequelize.fn('date', sequelize.col('updated_at')), '=', currentDate),
-          groupId: { [Op.notIn]: [26, 34] }
+          groupId: { [Op.notIn]: [84, 92] }
         },
         raw: true
       })
@@ -327,6 +331,96 @@ const databaseServices = {
         return updateData.map(item => item.update({ isListed: 0 }))
       })
       .then(msg => console.log(msg))
+  },
+  // 抓raw_stock_price資料
+  rawStockPrices: async () => {
+    const stocks = []
+    const targetUrls = []
+    const TIMEOUT = 2500
+
+    await Stock.findAll({
+      attributes: ['id', 'tradeCode'],
+      where: { isListed: true },
+      raw: true
+    })
+      .then(stocks => {
+        // 設定抓資料的清單
+        stocks.forEach(stock => {
+          const TARGET_URL = `https://www.twse.com.tw/rwd/zh/afterTrading/STOCK_DAY?date=${currentDateForAPI}&stockNo=${stock.tradeCode}&response=json`
+          const group = {
+            stockUrl: TARGET_URL,
+            stockId: stock.id,
+            tradeCode: stock.tradeCode
+          }
+          return targetUrls.push(group)
+        })
+        return stocks
+      })
+    // 依序抓資料，用setTimeout避免被判定為DDoS
+    // targetUrls.length
+    for (let index = 0; index < 30; index++) {
+      await new Promise(resolve => {
+        setTimeout(() => {
+          const result = targetUrls[index]
+          console.log(result)
+
+          axios.get(targetUrls[index].stockUrl)
+            .then(body => body.data.data)
+            .then(priceData => {
+              stocks.push({
+                tradeCode: result.tradeCode,
+                stockId: result.stockId,
+                prices: priceData
+              })
+              resolve()
+            })
+            .catch(err => {
+              console.log(err)
+              resolve()
+            })
+        }, TIMEOUT)
+      })
+    }
+    return stocks
+  },
+  createRawPrice: data => {
+    data.map(stock => {
+      // get prices
+      const prices = Object.values(stock)[2]
+      // get length of prices
+      const tradeDays = Object.values(stock)[2] === undefined ? 0 : prices.length
+      // get the latest price
+      const addPrice = tradeDays >= 1 ? prices[tradeDays - 1] : []
+
+      return RawPrice.findAll({
+        where: {
+          tradeDate: currentDate,
+          tradeCode: Object.values(stock)[0]
+        },
+        raw: true
+      })
+        .then(data => {
+          if (data.length) return `trade_code = ${data[0].tradeCode}, trade_date = ${data[0].tradeDate} is existed!`
+          if (!tradeDays) return `trade_code = ${stock.tradeCode} is delisted!`
+
+          if (addPrice[0] === currentDateTW) {
+            return RawPrice.create({
+              tradeDate: currentDate,
+              tradeCode: Object.values(stock)[0],
+              openPrc: priceConverter(addPrice[3]),
+              highPrc: priceConverter(addPrice[4]),
+              lowPrc: priceConverter(addPrice[5]),
+              closePrc: priceConverter(addPrice[6]),
+              tradeCnt: currencyStringToNumber(addPrice[8]),
+              tradeVol: currencyStringToNumber(addPrice[1]),
+              tradeAmt: currencyStringToNumber(addPrice[2]),
+              stockId: Object.values(stock)[1]
+            })
+          }
+        })
+        .then(msg => (typeof (msg) === 'object') ? console.log(`Data [ ${msg.toJSON().tradeCode} - ${msg.toJSON().tradeDate} ] is added.`) : console.log(msg))
+        .catch(err => console.log(err))
+    })
   }
 }
 

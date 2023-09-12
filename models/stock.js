@@ -11,6 +11,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate (models) {
       Stock.belongsTo(models.StockGroup, { foreignKey: 'groupId' })
+      Stock.hasMany(models.RawPrice, { foreignKey: 'stockId' })
     }
   };
   Stock.init({

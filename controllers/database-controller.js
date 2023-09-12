@@ -14,6 +14,10 @@ const databaseController = {
   },
   deriveToStocks: () => {
     databaseServices.deriveToStocks()
+  },
+  rawStockPrices: () => {
+    databaseServices.rawStockPrices()
+      .then(rawStockPrices => databaseServices.createRawPrice(rawStockPrices))
   }
 }
 
