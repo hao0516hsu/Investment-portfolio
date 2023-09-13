@@ -1,5 +1,5 @@
 // 引入Models
-const { sequelize, Exchange, RawStockGroup, StockGroup, RawStock, Stock, RawPrice } = require('../models')
+const { sequelize, Exchange, RawStockGroup, StockGroup, RawStock, Stock, RawPrice, Price } = require('../models')
 const { Op } = require('sequelize')
 // puppeteer: 模擬抓資料的套件
 const puppeteer = require('puppeteer')
@@ -15,14 +15,23 @@ const currentMonth = String(date.getMonth() + 1).padStart(2, '0')
 const currentYear = date.getFullYear()
 const currentDate = `${currentYear}-${currentMonth}-${currentDay}`
 const currentDateForAPI = `${currentYear}${currentMonth}${currentDay}`
-const currentDateTW = `${currentYear - 1911}/${currentMonth}/${currentDay}`
+
+// 民國年轉西元年
+function dateConverter (dateString) {
+  const dateArray = dateString.split('/')
+  return `${Number(dateArray[0]) + 1911}-${dateArray[1]}-${dateArray[2]}`
+}
 // convert currency string to number
-function currencyStringToNumber (string) {
+function stringToNumber (string) {
   return Number(string.replace(/[^0-9.-]+/g, ''))
 }
-
+// 處理抓檔的報價null值
 function priceConverter (price) {
-  return (price === '--') ? null : price
+  return (price === '--') ? null : stringToNumber(price)
+}
+// 處理漲跌價
+function diffPrcConverter (diffPrc) {
+  return (diffPrc.charAt(0) === '-') ? Number(diffPrc) : Number(diffPrc.slice(1))
 }
 
 const databaseServices = {
@@ -358,7 +367,7 @@ const databaseServices = {
       })
     // 依序抓資料，用setTimeout避免被判定為DDoS
     // targetUrls.length
-    for (let index = 0; index < 30; index++) {
+    for (let index = 0; index < targetUrls.length; index++) {
       await new Promise(resolve => {
         setTimeout(() => {
           const result = targetUrls[index]
@@ -389,38 +398,120 @@ const databaseServices = {
       const prices = Object.values(stock)[2]
       // get length of prices
       const tradeDays = Object.values(stock)[2] === undefined ? 0 : prices.length
-      // get the latest price
-      const addPrice = tradeDays >= 1 ? prices[tradeDays - 1] : []
+      // 若證券已下市, 忽略該筆
+      if (!tradeDays) {
+        const msg = `trade_code = ${stock.tradeCode} is delisted!`
+        console.log(msg)
+        return msg
+      }
+      // 依序比對交易資料
+      return prices.map(price => {
+        return RawPrice.findAll({
+          where: {
+            tradeDate: dateConverter(price[0]),
+            tradeCode: Object.values(stock)[0]
+          },
+          raw: true
+        })
+          .then(tradeDay => {
+            if (tradeDay.length) return `trade_code = ${tradeDay[0].tradeCode}, trade_date = ${tradeDay[0].tradeDate} is existed!`
 
-      return RawPrice.findAll({
-        where: {
-          tradeDate: currentDate,
-          tradeCode: Object.values(stock)[0]
-        },
-        raw: true
-      })
-        .then(data => {
-          if (data.length) return `trade_code = ${data[0].tradeCode}, trade_date = ${data[0].tradeDate} is existed!`
-          if (!tradeDays) return `trade_code = ${stock.tradeCode} is delisted!`
-
-          if (addPrice[0] === currentDateTW) {
             return RawPrice.create({
-              tradeDate: currentDate,
+              tradeDate: dateConverter(price[0]),
               tradeCode: Object.values(stock)[0],
-              openPrc: priceConverter(addPrice[3]),
-              highPrc: priceConverter(addPrice[4]),
-              lowPrc: priceConverter(addPrice[5]),
-              closePrc: priceConverter(addPrice[6]),
-              tradeCnt: currencyStringToNumber(addPrice[8]),
-              tradeVol: currencyStringToNumber(addPrice[1]),
-              tradeAmt: currencyStringToNumber(addPrice[2]),
+              openPrc: priceConverter(price[3]),
+              highPrc: priceConverter(price[4]),
+              lowPrc: priceConverter(price[5]),
+              closePrc: priceConverter(price[6]),
+              tradeCnt: stringToNumber(price[8]),
+              tradeVol: stringToNumber(price[1]),
+              tradeAmt: stringToNumber(price[2]),
+              diffPrc: price[7],
               stockId: Object.values(stock)[1]
             })
-          }
-        })
-        .then(msg => (typeof (msg) === 'object') ? console.log(`Data [ ${msg.toJSON().tradeCode} - ${msg.toJSON().tradeDate} ] is added.`) : console.log(msg))
-        .catch(err => console.log(err))
+          })
+          .then(msg => (typeof (msg) === 'object') ? console.log(`Data [ ${msg.toJSON().tradeCode} - ${msg.toJSON().tradeDate} ] is added.`) : console.log(msg))
+          .catch(err => console.log(err))
+      })
     })
+  },
+  deriveToPrices: () => {
+    const addDataSubquery = 'select trade_date, stock_id from prices'
+    RawPrice.findAll({
+      where: {
+        [Op.and]: [
+          sequelize.where(sequelize.literal('(trade_date, stock_id)'), 'not in', sequelize.literal(`(${addDataSubquery})`)),
+          sequelize.where(sequelize.fn('date', sequelize.col('updated_at')), '=', currentDate)
+        ]
+      },
+      raw: true
+    })
+      .then(prices => {
+        prices.map(price => {
+          return Price.create({
+            tradeDate: price.tradeDate,
+            stockId: price.stockId,
+            openPrc: price.openPrc,
+            highPrc: price.highPrc,
+            lowPrc: price.lowPrc,
+            closePrc: price.closePrc,
+            tradeCnt: price.tradeCnt,
+            tradeVol: price.tradeVol,
+            tradeAmt: price.tradeAmt,
+            diffPrc: diffPrcConverter(price.diffPrc)
+          })
+            .then(msg => (typeof (msg) === 'object') ? console.log(`Data [ ${msg.toJSON().stockId} - ${msg.toJSON().tradeDate} ] is added.`) : console.log(msg))
+            .catch(err => console.log(err))
+        })
+      })
+  },
+  nullPrices: () => {
+    // 找出報價都為null或是0的資料
+    Price.findAll({
+      where: {
+        openPrc: { [Op.or]: [null, 0] },
+        highPrc: { [Op.or]: [null, 0] },
+        lowPrc: { [Op.or]: [null, 0] },
+        closePrc: { [Op.or]: [null, 0] },
+        $and: sequelize.where(sequelize.fn('date', sequelize.col('updated_at')), '=', currentDate)
+      },
+      order: [['stockId', 'ASC'], ['tradeDate', 'ASC']],
+      raw: true
+    })
+      .then(nullPrices => {
+        // 依序找出各自前一筆的資料
+        for (let i = 0; i < nullPrices.length; i++) {
+          Price.findAll({
+            where: {
+              tradeDate: { [Op.lt]: nullPrices[i].tradeDate },
+              stockId: nullPrices[i].stockId
+            },
+            order: [['tradeDate', 'DESC']],
+            limit: 1,
+            raw: true
+          })
+            .then(previousRecord => {
+              // 不處理第一筆報價缺漏
+              if (!previousRecord[0]) return `[ ${nullPrices[i].stockId} - ${nullPrices[i].tradeDate} ] is the first record`
+              // 不處理前一天也是null的狀況
+              if (previousRecord[0].closePrc === null) return `[ ${nullPrices[i].stockId} - ${nullPrices[i].tradeDate} ] and previous trade day's close price are null`
+
+              return Price.update({
+                openPrc: Number(previousRecord[0].closePrc),
+                highPrc: Number(previousRecord[0].closePrc),
+                lowPrc: Number(previousRecord[0].closePrc),
+                closePrc: Number(previousRecord[0].closePrc)
+              }, {
+                where: {
+                  tradeDate: nullPrices[i].tradeDate,
+                  stockId: nullPrices[i].stockId
+                }
+              })
+            })
+            .then(msg => (typeof (msg) === 'object') ? console.log(`Data [ ${nullPrices[i].stockId} - ${nullPrices[i].tradeDate} ] is updated.`) : console.log(msg))
+            .catch(err => console.log(err))
+        }
+      })
   }
 }
 

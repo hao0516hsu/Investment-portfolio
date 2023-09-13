@@ -18,6 +18,10 @@ const databaseController = {
   rawStockPrices: () => {
     databaseServices.rawStockPrices()
       .then(rawStockPrices => databaseServices.createRawPrice(rawStockPrices))
+  },
+  deriveToPrices: async () => {
+    await databaseServices.deriveToPrices()
+    await databaseServices.nullPrices()
   }
 }
 

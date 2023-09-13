@@ -3,23 +3,23 @@ const {
   Model
 } = require('sequelize')
 module.exports = (sequelize, DataTypes) => {
-  class RawPrice extends Model {
+  class Price extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
     static associate (models) {
-      RawPrice.belongsTo(models.Stock, { foreignKey: 'stockId' })
+      // define association here
     }
   };
-  RawPrice.init({
+  Price.init({
     tradeDate: {
       type: DataTypes.DATEONLY,
       primaryKey: true
     },
-    tradeCode: {
-      type: DataTypes.STRING,
+    stockId: {
+      type: DataTypes.INTEGER,
       primaryKey: true
     },
     openPrc: DataTypes.DECIMAL,
@@ -29,12 +29,12 @@ module.exports = (sequelize, DataTypes) => {
     tradeCnt: DataTypes.INTEGER,
     tradeVol: DataTypes.BIGINT,
     tradeAmt: DataTypes.BIGINT,
-    diffPrc: DataTypes.STRING
+    diffPrc: DataTypes.DECIMAL
   }, {
     sequelize,
-    modelName: 'RawPrice',
-    tableName: 'Raw_prices',
+    modelName: 'Price',
+    tableName: 'Prices',
     underscored: true
   })
-  return RawPrice
+  return Price
 }

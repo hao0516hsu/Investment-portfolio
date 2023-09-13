@@ -12,5 +12,8 @@ const databaseController = require('./controllers/database-controller')
 // 執行raw_stock衍生到stock程式
 // databaseController.deriveToStocks()
 
-// 執行raw_stock_price抓檔程式
-databaseController.rawStockPrices()
+// 執行raw_price抓檔程式
+// databaseController.rawStockPrices()
+
+// 執行raw_price衍生到price程式
+databaseController.deriveToPrices()

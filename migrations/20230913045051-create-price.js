@@ -1,16 +1,16 @@
 'use strict'
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('Raw_prices', {
+    await queryInterface.createTable('Prices', {
       trade_date: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.DATEONLY
       },
-      trade_code: {
+      stock_id: {
         allowNull: false,
         primaryKey: true,
-        type: Sequelize.STRING
+        type: Sequelize.INTEGER
       },
       open_prc: {
         type: Sequelize.DECIMAL(9, 3)
@@ -34,14 +34,7 @@ module.exports = {
         type: Sequelize.BIGINT
       },
       diff_prc: {
-        type: Sequelize.STRING
-      },
-      stock_id: {
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'Stocks',
-          key: 'id'
-        }
+        type: Sequelize.DECIMAL(9, 3)
       },
       created_at: {
         allowNull: false,
@@ -54,6 +47,6 @@ module.exports = {
     })
   },
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('Raw_prices')
+    await queryInterface.dropTable('Prices')
   }
 }
