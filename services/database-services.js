@@ -1,5 +1,8 @@
-// 引入Models
+// Helpers
+const { dateConverter, stringToNumber, priceConverter, diffPrcConverter } = require('../helpers/database-helpers')
+// Models
 const { sequelize, Exchange, RawStockGroup, StockGroup, RawStock, Stock, RawPrice, Price } = require('../models')
+// Packages
 const { Op } = require('sequelize')
 // puppeteer: 模擬抓資料的套件
 const puppeteer = require('puppeteer')
@@ -16,26 +19,8 @@ const currentYear = date.getFullYear()
 const currentDate = `${currentYear}-${currentMonth}-${currentDay}`
 const currentDateForAPI = `${currentYear}${currentMonth}${currentDay}`
 
-// 民國年轉西元年
-function dateConverter (dateString) {
-  const dateArray = dateString.split('/')
-  return `${Number(dateArray[0]) + 1911}-${dateArray[1]}-${dateArray[2]}`
-}
-// convert currency string to number
-function stringToNumber (string) {
-  return Number(string.replace(/[^0-9.-]+/g, ''))
-}
-// 處理抓檔的報價null值
-function priceConverter (price) {
-  return (price === '--') ? null : stringToNumber(price)
-}
-// 處理漲跌價
-function diffPrcConverter (diffPrc) {
-  return (diffPrc.charAt(0) === '-') ? Number(diffPrc) : Number(diffPrc.slice(1))
-}
-
 const databaseServices = {
-  // 抓raw_stock_groups資料
+  // 從證交所抓股票分類資料
   rawStockGroups: () => {
     const TARGET_URL = 'https://www.twse.com.tw/zh/listed/profile/company.html'
     const TARGET_MODAL = '.stock-code-browse'
@@ -44,7 +29,6 @@ const databaseServices = {
     return (async () => {
       // 啟動模擬瀏覽器
       const browser = await puppeteer.launch({
-        headless: true,
         executablePath: chromium.path
       })
       // 開啟新分頁
@@ -70,7 +54,7 @@ const databaseServices = {
       return await panelButtons
     })()
   },
-  // RawStockGroups CRUD
+  // 匯入資料到Raw_stock_groups或是從Raw_stock_groups刪除資料
   createRawStockGroups: data => {
     // 新增段
     // 逐筆搜尋資料庫是否有該筆資料
@@ -78,17 +62,14 @@ const databaseServices = {
       return await RawStockGroup.findOne({
         where: {
           group_name: item.groupName,
-          begin_date: {
-            [Op.lte]: date
-          },
-          end_date: {
-            [Op.gt]: date
-          }
-        }
+          begin_date: { [Op.lte]: date },
+          end_date: { [Op.gt]: date }
+        },
+        raw: true
       })
-        .then(isExisted => {
+        .then(stockGroups => {
           // 若有,表示不必更新
-          if (isExisted) return `Data ${item.name} kept unchanged.`
+          if (stockGroups) return `Data ${item.groupName} kept unchanged.`
           // 若無, 表示需要新增
           return RawStockGroup.create({
             groupName: item.groupName,
@@ -104,12 +85,8 @@ const databaseServices = {
     // 找尋現存的所有資料
     RawStockGroup.findAll({
       where: {
-        begin_date: {
-          [Op.lte]: date
-        },
-        end_date: {
-          [Op.gt]: date
-        }
+        begin_date: { [Op.lte]: date },
+        end_date: { [Op.gt]: date }
       }
     })
       .then(items => {
@@ -125,18 +102,20 @@ const databaseServices = {
           .catch(err => console.error(err))
       })
   },
-  // RawStockGroups Derives To StockGroups
+  // Raw_stock_groups衍生到 Stock_groups
   deriveToStockGroup: () => {
     const addDataSubquery = 'select group_name from stock_groups'
     const removeDataSubquery = `select id from raw_stock_groups where begin_date <= "${currentDate}" and end_date > "${currentDate}"`
-    // Add Data To Stock_Group
+    // 新增資料到Stock_group
     Promise.all([
+      // 找Exchange的交易所id
       Exchange.findAll({
         attributes: ['id'],
         where: { abbrev: 'TWSE' },
         nest: true,
         raw: true
       }),
+      // 找Raw_stock_group更新的資料,且不存在Stock_group
       RawStockGroup.findAll({
         attributes: ['groupName', 'groupCode'],
         where: {
@@ -151,6 +130,7 @@ const databaseServices = {
       .then(([exchangeId, createData]) => {
         if (!createData.length) return 'No data has been added to the Stock_group table.'
 
+        // 依序建立資料
         return createData.map(item => (
           StockGroup.create({
             id: item.id,
@@ -162,10 +142,10 @@ const databaseServices = {
       })
       .then(msg => console.log(msg))
 
-    // Remove Data From Stock_Group
+    // 刪除Stock_group的資料
     Promise.all([
+      // 查詢不在Raw_stock_group起訖日區間的資料
       StockGroup.findAll({
-        // attributes: ['groupName', 'groupCode'],
         where: { id: { [Op.notIn]: sequelize.literal(`(${removeDataSubquery})`) } }
       })]
     )
@@ -178,12 +158,13 @@ const databaseServices = {
       })
       .then(msg => console.log(msg))
   },
-  // 抓raw_stock資料
+  // 抓Raw_stocks資料
   rawStocks: async () => {
     const stocks = {}
     const targetUrls = []
     const TIMEOUT = 4000
 
+    // 查詢is_target為true的樣本類股清單
     await StockGroup.findAll({
       attributes: ['id', 'groupName', 'groupCode'],
       where: { isTarget: true },
@@ -192,6 +173,7 @@ const databaseServices = {
       .then(stockGroups => {
         // 設定抓資料的清單
         stockGroups.forEach(stockGroup => {
+          // 類股清單的API
           const TARGET_URL = `https://www.twse.com.tw/rwd/zh/api/codeFilters?filter=${stockGroup.groupCode}`
           const group = {
             groupUrl: TARGET_URL,
@@ -207,7 +189,7 @@ const databaseServices = {
         setTimeout(() => {
           const result = targetUrls[index]
           console.log(result)
-          // stocks[index] = result
+
           axios.get(targetUrls[index].groupUrl)
             .then(body => body.data.result)
             .then(stocksData => {
@@ -224,7 +206,7 @@ const databaseServices = {
 
     return stocks
   },
-  // RawStock CRUD
+  // 匯入資料到Raw_stocks或是從Raw_stocks刪除資料
   createRawStock: async data => {
     const dataKeys = Object.keys(data)
     const dataValues = Object.values(data)
@@ -232,12 +214,13 @@ const databaseServices = {
 
     // 資料處理段
     console.log('================== Data extracting ==================')
-
+    // 處理第i組分類的第j個股票的內容
     for (let i = 0; i < dataValues.length; i++) {
       for (let j = 0; j < dataValues[i].length; j++) {
         const dataSplit = dataValues[i][j].split('\t')
+        // 把groupId塞到dataSplit
         dataSplit.push(Number(dataKeys[i]))
-
+        // 轉成object,並推到dataExtracted
         dataExtracted.push({
           tradeCode: dataSplit[0],
           name: dataSplit[1],
@@ -247,14 +230,17 @@ const databaseServices = {
     }
     // 新增段
     console.log('================== Data adding ==================')
+    // 依序處理
     await dataExtracted.map(stock => {
+      // 找出dataExtracted的元素是否存在Raw_stock
       return RawStock.findOne({
         where: { tradeCode: stock.tradeCode, name: stock.name },
         raw: true
       })
         .then(stockInfo => {
+          // 若有,就不處理
           if (stockInfo) return `Data [ ${stockInfo.tradeCode} - ${stockInfo.name} ] remains unchanged.`
-
+          // 若無,新增該筆資料(預設新增日都是今天)
           return RawStock.create({
             tradeCode: stock.tradeCode,
             name: stock.name,
@@ -270,12 +256,8 @@ const databaseServices = {
     console.log('================== Data removing ==================')
     await RawStock.findAll({
       where: {
-        beginDate: {
-          [Op.lte]: date
-        },
-        endDate: {
-          [Op.gt]: date
-        }
+        beginDate: { [Op.lte]: date },
+        endDate: { [Op.gt]: date }
       }
     })
       .then(stockList => {
@@ -293,20 +275,20 @@ const databaseServices = {
           .catch(err => console.error(err))
       })
   },
-  // RawStock Derives To Stock
+  // Raw_stocks衍生到 Stocks
   deriveToStocks: async () => {
     const addDataSubquery = 'select trade_code from stocks'
     const updateDataSubquery = `select id from raw_stocks where date(updated_at) = '${currentDate}' and end_date != '2999-12-31'`
+    // 化學生技醫療業和電子業
+    const EXCLUDE_GROUPS = [26, 34]
 
-    // Add Data To Stock
+    // 新增資料到Stock
     await Promise.all([
       RawStock.findAll({
         where: {
-          tradeCode: {
-            [Op.notIn]: sequelize.literal(`(${addDataSubquery})`)
-          },
+          tradeCode: { [Op.notIn]: sequelize.literal(`(${addDataSubquery})`) },
           $and: sequelize.where(sequelize.fn('date', sequelize.col('updated_at')), '=', currentDate),
-          groupId: { [Op.notIn]: [84, 92] }
+          groupId: { [Op.notIn]: EXCLUDE_GROUPS }
         },
         raw: true
       })
@@ -326,7 +308,7 @@ const databaseServices = {
       })
       .then(msg => console.log(msg))
 
-    // Update Data To Stock
+    // 剔除段: 更新資料
     await Promise.all([
       Stock.findAll({
         where: {
@@ -341,7 +323,7 @@ const databaseServices = {
       })
       .then(msg => console.log(msg))
   },
-  // 抓raw_stock_price資料
+  // 抓Raw_prices資料
   rawStockPrices: async () => {
     const stocks = []
     const targetUrls = []
@@ -392,6 +374,7 @@ const databaseServices = {
     }
     return stocks
   },
+  // 匯入資料到Raw_prices
   createRawPrice: data => {
     data.map(stock => {
       // get prices
@@ -435,6 +418,7 @@ const databaseServices = {
       })
     })
   },
+  // Raw_prices衍生到 Prices
   deriveToPrices: () => {
     const addDataSubquery = 'select trade_date, stock_id from prices'
     RawPrice.findAll({
@@ -465,6 +449,7 @@ const databaseServices = {
         })
       })
   },
+  // 衍生 Prices的報價為NULL的資料
   nullPrices: () => {
     // 找出報價都為null或是0的資料
     Price.findAll({

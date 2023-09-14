@@ -1,19 +1,18 @@
 const databaseServices = require('../services/database-services')
 
 const databaseController = {
-  rawStockGroups: async () => {
+  rawStockGroups: () => {
+    // 執行抓檔
     Promise.all([databaseServices.rawStockGroups()])
+      // 匯入
       .then(rawStockGroups => databaseServices.createRawStockGroups(rawStockGroups[0]))
-  },
-  deriveToStockGroup: () => {
-    databaseServices.deriveToStockGroup()
+      // 衍生
+      .then(() => databaseServices.deriveToStockGroup())
   },
   rawStocks: () => {
     databaseServices.rawStocks()
       .then(rawStocks => databaseServices.createRawStock(rawStocks))
-  },
-  deriveToStocks: () => {
-    databaseServices.deriveToStocks()
+      .then(() => databaseServices.deriveToStocks())
   },
   rawStockPrices: () => {
     databaseServices.rawStockPrices()
