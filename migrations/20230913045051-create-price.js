@@ -10,7 +10,11 @@ module.exports = {
       stock_id: {
         allowNull: false,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'Stocks',
+          key: 'id'
+        }
       },
       open_prc: {
         type: Sequelize.DECIMAL(9, 3)
