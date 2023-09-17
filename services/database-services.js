@@ -1,7 +1,7 @@
 // Helpers
 const { dateConverter, stringToNumber, priceConverter, diffPrcConverter } = require('../helpers/database-helpers')
 // Models
-const { sequelize, Exchange, RawStockGroup, StockGroup, RawStock, Stock, RawPrice, Price } = require('../models')
+const { sequelize, Exchange, RawStockGroup, StockGroup, RawStock, Stock, RawPrice, Price, AveragePrice, Period } = require('../models')
 // Packages
 const { Op } = require('sequelize')
 // puppeteer: 模擬抓資料的套件
@@ -496,6 +496,50 @@ const databaseServices = {
             .then(msg => (typeof (msg) === 'object') ? console.log(`Data [ ${nullPrices[i].stockId} - ${nullPrices[i].tradeDate} ] is updated.`) : console.log(msg))
             .catch(err => console.log(err))
         }
+      })
+  },
+  // Prices衍生到 Average_Prices
+  deriveToAvgprices: async () => {
+    const periods = []
+
+    await Period.findAll({
+      where: {
+        periodCode: ['D0005', 'D0020', 'D0060', 'D0120']
+      },
+      raw: true
+    })
+      .then(period => {
+        periods.push(period)
+      })
+
+    await Price.findAll({
+      where: {
+        stockId: 3155,
+        tradeDate: { [Op.lte]: '2023/9/17' }
+      },
+      order: [['tradeDate', 'DESC']],
+      limit: periods[0][2].periodParams,
+      raw: true
+    })
+      .then(days => {
+        let totalClose = 0
+        let totalAmt = 0
+        let totalVol = 0
+        let cnt = 0
+        days.forEach(items => {
+          totalClose += Number(items.closePrc)
+          totalAmt += Number(items.tradeAmt)
+          totalVol += Number(items.tradeVol)
+          cnt += 1
+        })
+        return AveragePrice.create({
+          stockId: days[0].stockId,
+          tradeDate: '2023/9/17',
+          periodId: periods[0][2].id,
+          avgClose: totalClose / cnt,
+          avgAmt: totalAmt / cnt,
+          avgVol: totalVol / cnt
+        })
       })
   }
 }

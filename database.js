@@ -7,7 +7,7 @@ const databaseController = require('./controllers/database-controller')
 // databaseController.rawStocks()
 
 // 執行Raw_prices抓檔程式
-databaseController.rawStockPrices()
+// databaseController.rawStockPrices()
 
 // 執行Raw_prices衍生到Prices程式
-// databaseController.deriveToPrices()
+databaseController.deriveToAvgprices()

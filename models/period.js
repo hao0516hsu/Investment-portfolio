@@ -10,12 +10,13 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate (models) {
-      // define association here
+      Period.hasMany(models.AveragePrice, { foreignKey: 'periodId' })
     }
   };
   Period.init({
     periodCode: DataTypes.STRING,
-    description: DataTypes.TEXT
+    description: DataTypes.TEXT,
+    periodParams: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'Period',

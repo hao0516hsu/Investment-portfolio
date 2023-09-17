@@ -21,6 +21,9 @@ const databaseController = {
   deriveToPrices: async () => {
     await databaseServices.deriveToPrices()
     await databaseServices.nullPrices()
+  },
+  deriveToAvgprices: () => {
+    databaseServices.deriveToAvgprices()
   }
 }
 
