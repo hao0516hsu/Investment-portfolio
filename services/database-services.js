@@ -1,7 +1,8 @@
 // Helpers
 const { dateConverter, stringToNumber, priceConverter, diffPrcConverter } = require('../helpers/database-helpers')
+const { newDate, dateAPI } = require('../helpers/date-helpers')
 // Models
-const { sequelize, Exchange, RawStockGroup, StockGroup, RawStock, Stock, RawPrice, Price, AveragePrice, Period } = require('../models')
+const { sequelize, Exchange, RawStockGroup, StockGroup, RawStock, Stock, RawPrice, Price, AveragePrice, Period, TradeDate } = require('../models')
 // Packages
 const { Op } = require('sequelize')
 // puppeteer: 模擬抓資料的套件
@@ -12,13 +13,10 @@ const chromium = require('chromium')
 const axios = require('axios')
 // date
 const date = new Date()
+const currentDate = newDate(date)
+const currentDateForAPI = dateAPI(date)
 
-const currentDay = String(date.getDate()).padStart(2, '0')
-const currentMonth = String(date.getMonth() + 1).padStart(2, '0')
-const currentYear = date.getFullYear()
-const currentDate = `${currentYear}-${currentMonth}-${currentDay}`
-const currentDateForAPI = `${currentYear}${currentMonth}${currentDay}`
-
+// 主要功能
 const databaseServices = {
   // 從證交所抓股票分類資料
   rawStockGroups: () => {
@@ -499,8 +497,9 @@ const databaseServices = {
       })
   },
   // Prices衍生到 Average_Prices
-  deriveToAvgprices: async () => {
+  deriveToAvgprices: async dataDate => {
     const periods = []
+    // const DATA_DATE = '2023/9/15'
 
     await Period.findAll({
       where: {
@@ -512,35 +511,62 @@ const databaseServices = {
         periods.push(period)
       })
 
-    await Price.findAll({
-      where: {
-        stockId: 3155,
-        tradeDate: { [Op.lte]: '2023/9/17' }
-      },
-      order: [['tradeDate', 'DESC']],
-      limit: periods[0][2].periodParams,
-      raw: true
-    })
-      .then(days => {
-        let totalClose = 0
-        let totalAmt = 0
-        let totalVol = 0
-        let cnt = 0
-        days.forEach(items => {
-          totalClose += Number(items.closePrc)
-          totalAmt += Number(items.tradeAmt)
-          totalVol += Number(items.tradeVol)
-          cnt += 1
-        })
-        return AveragePrice.create({
-          stockId: days[0].stockId,
-          tradeDate: '2023/9/17',
-          periodId: periods[0][2].id,
-          avgClose: totalClose / cnt,
-          avgAmt: totalAmt / cnt,
-          avgVol: totalVol / cnt
-        })
+    await periods[0].map(async period => {
+      const periodQuery = `select tradeday_cnt - ${period.periodParams} from trade_dates where calendar_date= '${dataDate}'`
+
+      await Price.findAll({
+        attributes: [
+          ['stock_id', 'stockId'],
+          [sequelize.fn('avg', sequelize.col('close_prc')), 'avgClose'],
+          [sequelize.fn('avg', sequelize.col('trade_vol')), 'avgVol'],
+          [sequelize.fn('avg', sequelize.col('trade_amt')), 'avgAmt']
+        ],
+        include: [{
+          model: TradeDate
+        }],
+        where: {
+          tradeDate: { [Op.lte]: dataDate },
+          '$TradeDate.tradeday_cnt$': { [Op.gt]: sequelize.literal(`(${periodQuery})`) }
+        },
+        group: ['stock_id'],
+        nest: true,
+        raw: true
       })
+        .then(days => {
+          days.map(items => {
+            return AveragePrice.create({
+              stockId: items.stockId,
+              tradeDate: dataDate,
+              periodId: period.id,
+              avgClose: items.avgClose,
+              avgAmt: items.avgAmt,
+              avgVol: items.avgVol
+            })
+          })
+        })
+    })
+  },
+  // Trade_dates的tradeday_cnt衍生
+  tradedayCnt: () => {
+    // 2023-08-03 卡努颱風
+    const updatedDate = []
+    TradeDate.findAll({
+      where: {
+        isTrade: 1
+      }
+    })
+      .then(tradedays => {
+        for (let i = 0; i < tradedays.length; i++) {
+          tradedays[i].update({
+            tradedayCnt: i + 1
+          })
+          updatedDate.push({
+            date: tradedays[i].toJSON().calendarDate
+          })
+        }
+        return updatedDate
+      })
+      .then(values => console.log('updated dates: ', values))
   }
 }
 

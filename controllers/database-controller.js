@@ -22,8 +22,11 @@ const databaseController = {
     await databaseServices.deriveToPrices()
     await databaseServices.nullPrices()
   },
-  deriveToAvgprices: () => {
-    databaseServices.deriveToAvgprices()
+  deriveToAvgprices: dataDate => {
+    databaseServices.deriveToAvgprices(dataDate)
+  },
+  tradedayCnt: () => {
+    databaseServices.tradedayCnt()
   }
 }
 
