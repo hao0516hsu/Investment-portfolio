@@ -24,6 +24,7 @@ const databaseController = {
   },
   deriveToAvgprices: dataDate => {
     databaseServices.deriveToAvgprices(dataDate)
+    setTimeout(() => { databaseServices.deriveToAvgpriceAcross(dataDate) }, 8000)
   },
   tradedayCnt: () => {
     databaseServices.tradedayCnt()

@@ -2,7 +2,7 @@
 const { dateConverter, stringToNumber, priceConverter, diffPrcConverter } = require('../helpers/database-helpers')
 const { newDate, dateAPI } = require('../helpers/date-helpers')
 // Models
-const { sequelize, Exchange, RawStockGroup, StockGroup, RawStock, Stock, RawPrice, Price, AveragePrice, Period, TradeDate } = require('../models')
+const { sequelize, Exchange, RawStockGroup, StockGroup, RawStock, Stock, RawPrice, Price, AveragePrice, Period, TradeDate, AveragePriceAcross } = require('../models')
 // Packages
 const { Op } = require('sequelize')
 // puppeteer: 模擬抓資料的套件
@@ -533,8 +533,8 @@ const databaseServices = {
         raw: true
       })
         .then(days => {
-          days.map(items => {
-            return AveragePrice.create({
+          days.map(async items => {
+            return await AveragePrice.create({
               stockId: items.stockId,
               tradeDate: dataDate,
               periodId: period.id,
@@ -567,6 +567,54 @@ const databaseServices = {
         return updatedDate
       })
       .then(values => console.log('updated dates: ', values))
+  },
+  // Average_Prices打橫
+  deriveToAvgpriceAcross: async dataDate => {
+    await AveragePrice.findAll({
+      attributes: [['trade_date', 'tradeDate'], ['stock_id', 'stockId'], ['avg_close', 'avgClose'], ['avg_amt', 'avgAmt'], ['avg_vol', 'avgVol']],
+      include: [{
+        model: AveragePrice,
+        attributes: [['avg_close', 'avgClose'], ['avg_amt', 'avgAmt'], ['avg_vol', 'avgVol']],
+        as: 'D20'
+      },
+      {
+        model: AveragePrice,
+        attributes: [['avg_close', 'avgClose'], ['avg_amt', 'avgAmt'], ['avg_vol', 'avgVol']],
+        as: 'D60'
+      },
+      {
+        model: AveragePrice,
+        attributes: [['avg_close', 'avgClose'], ['avg_amt', 'avgAmt'], ['avg_vol', 'avgVol']],
+        as: 'D120'
+      }
+      ],
+      where: {
+        tradeDate: dataDate,
+        periodId: 11
+      },
+      raw: true,
+      nest: true
+    })
+      .then(avgPrices => {
+        avgPrices.map(avg => {
+          return AveragePriceAcross.create({
+            tradeDate: avg.tradeDate,
+            stockId: avg.stockId,
+            D5Close: avg.avgClose,
+            D5Vol: avg.avgVol,
+            D5Amt: avg.avgAmt,
+            D20Close: avg.D20.avgClose,
+            D20Vol: avg.D20.avgVol,
+            D20Amt: avg.D20.avgAmt,
+            D60Close: avg.D60.avgClose,
+            D60Vol: avg.D60.avgVol,
+            D60Amt: avg.D60.avgAmt,
+            D120Close: avg.D120.avgClose,
+            D120Vol: avg.D120.avgVol,
+            D120Amt: avg.D120.avgAmt
+          })
+        })
+      })
   }
 }
 

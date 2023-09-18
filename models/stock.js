@@ -14,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
       Stock.hasMany(models.RawPrice, { foreignKey: 'stockId' })
       Stock.hasMany(models.Price, { foreignKey: 'stockId' })
       Stock.hasMany(models.AveragePrice, { foreignKey: 'stockId' })
+      Stock.hasMany(models.AveragePriceAcross, { foreignKey: 'stockId' })
     }
   };
   Stock.init({

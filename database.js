@@ -13,7 +13,7 @@ const databaseController = require('./controllers/database-controller')
 // databaseController.deriveToPrices()
 
 // 執行Prices衍生到Average_Prices程式
-databaseController.deriveToAvgprices('2023/9/14')
+databaseController.deriveToAvgprices('2023/9/11')
 
 // 執行Trade_Dates的tradedayCnt衍生程式
 // databaseController.tradedayCnt()
