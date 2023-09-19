@@ -2,7 +2,7 @@ const { newDate } = require('../helpers/date-helpers')
 const { StockGroup, Stock, Price, AveragePriceAcross, Sequelize } = require('../models')
 const { Op } = require('sequelize')
 
-const portfolioService = {
+const portfolioServices = {
   // 個別證券的頁面
   getStock: (req, cb) => {
     const date = new Date()
@@ -137,4 +137,4 @@ const portfolioService = {
       })
   }
 }
-module.exports = portfolioService
+module.exports = portfolioServices
