@@ -15,6 +15,8 @@ module.exports = (sequelize, DataTypes) => {
       Stock.hasMany(models.Price, { foreignKey: 'stockId' })
       Stock.hasMany(models.AveragePrice, { foreignKey: 'stockId' })
       Stock.hasMany(models.AveragePriceAcross, { foreignKey: 'stockId' })
+      Stock.belongsToMany(models.User, { through: models.Portfolio, foreignKey: 'stockId', as: 'UsersPortfolios' })
+      Stock.hasMany(models.Portfolio, { foreignKey: 'stockId' })
     }
   };
   Stock.init({

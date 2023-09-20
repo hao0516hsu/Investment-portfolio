@@ -19,4 +19,4 @@ const dateAPI = date => {
   return `${getYear(date)}${getMonth(date)}${getDay(date)}`
 }
 
-module.exports = { newDate, dateAPI }
+module.exports = { newDate, dateAPI, getYear }

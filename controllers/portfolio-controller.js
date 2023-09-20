@@ -8,6 +8,18 @@ const portfolioController = {
   },
   getStockList: (req, res, next) => {
     portfolioServices.getStockLists(req, (err, data) => err ? next(err) : res.json({ status: 'success', result: data }))
+  },
+  postPortfolio: (req, res, next) => {
+    portfolioServices.postPortfolio(req, (err, data) => err ? next(err) : res.json({ status: 'success', result: data }))
+  },
+  getPortfolio: (req, res, next) => {
+    portfolioServices.getPortfolio(req, (err, data) => err ? next(err) : res.json({ status: 'success', result: data }))
+  },
+  patchPortfolio: (req, res, next) => {
+    portfolioServices.patchPortfolio(req, (err, data) => err ? next(err) : res.json({ status: 'success', result: data }))
+  },
+  deletePortfolio: (req, res, next) => {
+    portfolioServices.deletePortfolio(req, (err, data) => err ? next(err) : res.json({ status: 'success', result: data }))
   }
 }
 

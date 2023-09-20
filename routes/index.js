@@ -9,7 +9,7 @@ const userController = require('../controllers/user-controller')
 // middleware
 const { apiErrorHandler } = require('../middleware/error-handler')
 const { userSignIn, adminSignIn } = require('../middleware/login-handler')
-// const { authenticated, authenticatedAdmin } = require('../middleware/api-auth')
+const { authenticated, authenticatedAdmin } = require('../middleware/api-auth')
 
 // 路由：帳號登入(後台)
 router.post('/admin/signin', adminSignIn, userController.signIn)
@@ -24,6 +24,11 @@ router.get('/stocks/:id', portfolioController.getStock)
 router.get('/stocks', portfolioController.getStocks)
 // 路由: 股票清單
 router.get('/stocklist', portfolioController.getStockList)
+// 路由: 投資組合清單(Portfolio)
+router.patch('/portfolio/:id', authenticated, portfolioController.patchPortfolio)
+router.delete('/portfolio/:id', authenticated, portfolioController.deletePortfolio)
+router.get('/portfolio', authenticated, portfolioController.getPortfolio)
+router.post('/portfolio', authenticated, portfolioController.postPortfolio)
 
 router.use('/', apiErrorHandler)
 module.exports = router
