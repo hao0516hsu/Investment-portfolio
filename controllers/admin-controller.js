@@ -27,6 +27,15 @@ const adminController = {
   getStocks: (req, res, next) => {
     adminServices.getStocks(req, (err, data) => err ? next(err) : res.json({ status: 'success', result: data }))
   },
+  postStock: (req, res, next) => {
+    adminServices.postStock(req, (err, data) => err ? next(err) : res.json({ status: 'success', result: data }))
+  },
+  patchStock: (req, res, next) => {
+    adminServices.patchStock(req, (err, data) => err ? next(err) : res.json({ status: 'success', result: data }))
+  },
+  deleteStock: (req, res, next) => {
+    adminServices.deleteStock(req, (err, data) => err ? next(err) : res.json({ status: 'success', result: data }))
+  },
   getTradeDates: (req, res, next) => {
     adminServices.getTradeDates(req, (err, data) => err ? next(err) : res.json({ status: 'success', result: data }))
   }

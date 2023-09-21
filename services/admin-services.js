@@ -184,6 +184,79 @@ const adminServices = {
       })
       .catch(err => cb(err))
   },
+  postStock: (req, cb) => {
+    const { tradeCode, name, isListed, groupId } = req.body
+
+    if (!tradeCode || !name) throw new Error('不得為空白！')
+    if (!Number.isInteger(groupId)) throw new Error('不得輸入數值以外的字元！')
+    if (!(isListed === 0 || isListed === 1)) throw new Error('只能輸入是或否！')
+    if (tradeCode.includes(';') || tradeCode.includes('--') || name.includes(';') || name.includes('--')) throw new Error('出現無效字元！')
+    if (tradeCode.length > 7) throw new Error('不得超過7個字元！')
+    if (name.length > 20) throw new Error('不得超過20個字元！')
+
+    return Stock.create({ tradeCode, name, isListed, groupId })
+      .then(createStock => {
+        return cb(null, { stock: createStock })
+      })
+      .catch(err => cb(err))
+  },
+  patchStock: (req, cb) => {
+    const id = req.params.id
+    const { tradeCode, name, isListed, groupId } = req.body
+
+    if (!tradeCode || !name) throw new Error('不得為空白！')
+    if (!Number.isInteger(groupId)) throw new Error('不得輸入數值以外的字元！')
+    if (!(isListed === 0 || isListed === 1)) throw new Error('只能輸入是或否！')
+    if (tradeCode.includes(';') || tradeCode.includes('--') || name.includes(';') || name.includes('--')) throw new Error('出現無效字元！')
+    if (tradeCode.length > 7) throw new Error('不得超過7個字元！')
+    if (name.length > 20) throw new Error('不得超過20個字元！')
+
+    return Stock.findOne({
+      where: { id },
+      raw: true
+    })
+      .then(stock => {
+        if (!stock) {
+          const err = new Error('查無資料！')
+          err.status = 404
+          throw err
+        }
+        const patchStock = { tradeCode, name, isListed, groupId }
+
+        if (tradeCode === stock.tradeCode) delete patchStock.tradeCode
+        if (name === stock.name) delete patchStock.name
+        if (groupId === Number(stock.groupId)) delete patchStock.groupId
+        if (isListed === stock.isListed) delete patchStock.isListed
+        if (!Object.keys(patchStock).length) throw new Error('沒有修改資料！')
+
+        return Stock.update(patchStock, { where: { id } })
+      })
+      .then(() => {
+        return cb(null, { stock: { id, tradeCode, name, isListed, groupId } })
+      })
+      .catch(err => cb(err))
+  },
+  deleteStock: (req, cb) => {
+    const id = req.params.id
+
+    Stock.findOne({
+      where: { id },
+      raw: true
+    })
+      .then(stock => {
+        if (!stock) {
+          const err = new Error('查無資料！')
+          err.status = 404
+          throw err
+        }
+        Stock.destroy({ where: { id } })
+        return stock
+      })
+      .then(deletedStock => {
+        return cb(null, { stock: deletedStock })
+      })
+      .catch(err => cb(err))
+  },
   // 交易日資料
   getTradeDates: (req, cb) => {
     const previousDay = new Date(new Date().setDate(date.getDate() - 10))
