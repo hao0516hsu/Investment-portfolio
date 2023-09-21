@@ -5,7 +5,10 @@ const router = express.Router()
 const adminController = require('../../controllers/admin-controller')
 
 // 路由: 交易所相關
+router.put('/exchanges/:id', adminController.putExchange)
+router.delete('/exchanges/:id', adminController.deleteExchange)
 router.get('/exchanges', adminController.getExchanges)
+router.post('/exchanges', adminController.postExchange)
 
 // 路由: 股票分類相關
 router.get('/stockgroups', adminController.getStockGroups)
