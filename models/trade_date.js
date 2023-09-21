@@ -11,6 +11,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate (models) {
       TradeDate.hasMany(models.Price, { foreignKey: 'tradeDate' })
+      TradeDate.belongsTo(models.HolidayType, { foreignKey: 'holidayType' })
     }
   };
   TradeDate.init({
