@@ -96,6 +96,79 @@ const adminServices = {
       })
       .catch(err => cb(err))
   },
+  postStockGroup: (req, cb) => {
+    const { groupName, groupCode, exchangeId, isTarget } = req.body
+
+    if (!groupName || !exchangeId) throw new Error('不得為空白！')
+    if (!Number.isInteger(exchangeId)) throw new Error('不得輸入數值以外的字元！')
+    if (!(isTarget === 0 || isTarget === 1)) throw new Error('只能輸入是或否！')
+    if (groupName.includes(';') || groupName.includes('--') || groupCode.includes(';') || groupCode.includes('--')) throw new Error('出現無效字元！')
+    if (groupName.length > 20) throw new Error('不得超過20個字元！')
+    if (groupCode.length > 50) throw new Error('不得超過50個字元！')
+
+    return StockGroup.create({ groupName, groupCode, exchangeId, isTarget })
+      .then(createStockGroup => {
+        return cb(null, { stockgroup: createStockGroup })
+      })
+      .catch(err => cb(err))
+  },
+  patchStockGroup: (req, cb) => {
+    const id = req.params.id
+    const { groupName, groupCode, exchangeId, isTarget } = req.body
+
+    if (!groupName || !exchangeId) throw new Error('不得為空白！')
+    if (!Number.isInteger(exchangeId)) throw new Error('不得輸入數值以外的字元！')
+    if (!(isTarget === 0 || isTarget === 1)) throw new Error('只能輸入是或否！')
+    if (groupName.includes(';') || groupName.includes('--') || groupCode.includes(';') || groupCode.includes('--')) throw new Error('出現無效字元！')
+    if (groupName.length > 20) throw new Error('不得超過20個字元！')
+    if (groupCode.length > 50) throw new Error('不得超過50個字元！')
+
+    return StockGroup.findOne({
+      where: { id },
+      raw: true
+    })
+      .then(stockgroup => {
+        if (!stockgroup) {
+          const err = new Error('查無資料！')
+          err.status = 404
+          throw err
+        }
+        const patchStockGroup = { groupName, groupCode, exchangeId, isTarget }
+
+        if (groupName === stockgroup.groupName) delete patchStockGroup.groupName
+        if (groupCode === stockgroup.groupCode) delete patchStockGroup.groupCode
+        if (exchangeId === Number(stockgroup.exchangeId)) delete patchStockGroup.exchangeId
+        if (isTarget === stockgroup.isTarget) delete patchStockGroup.isTarget
+        if (!Object.keys(patchStockGroup).length) throw new Error('沒有修改資料！')
+
+        return StockGroup.update(patchStockGroup, { where: { id } })
+      })
+      .then(() => {
+        return cb(null, { stockgroup: { id, groupName, groupCode, exchangeId, isTarget } })
+      })
+      .catch(err => cb(err))
+  },
+  deleteStockGroup: (req, cb) => {
+    const id = req.params.id
+
+    StockGroup.findOne({
+      where: { id },
+      raw: true
+    })
+      .then(stockGroup => {
+        if (!stockGroup) {
+          const err = new Error('查無資料！')
+          err.status = 404
+          throw err
+        }
+        StockGroup.destroy({ where: { id } })
+        return stockGroup
+      })
+      .then(deletedStockGroup => {
+        return cb(null, { stockgroup: deletedStockGroup })
+      })
+      .catch(err => cb(err))
+  },
   // 股票資料
   getStocks: (req, cb) => {
     Stock.findAll({

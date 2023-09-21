@@ -15,6 +15,15 @@ const adminController = {
   getStockGroups: (req, res, next) => {
     adminServices.getStockGroups(req, (err, data) => err ? next(err) : res.json({ status: 'success', result: data }))
   },
+  postStockGroup: (req, res, next) => {
+    adminServices.postStockGroup(req, (err, data) => err ? next(err) : res.json({ status: 'success', result: data }))
+  },
+  patchStockGroup: (req, res, next) => {
+    adminServices.patchStockGroup(req, (err, data) => err ? next(err) : res.json({ status: 'success', result: data }))
+  },
+  deleteStockGroup: (req, res, next) => {
+    adminServices.deleteStockGroup(req, (err, data) => err ? next(err) : res.json({ status: 'success', result: data }))
+  },
   getStocks: (req, res, next) => {
     adminServices.getStocks(req, (err, data) => err ? next(err) : res.json({ status: 'success', result: data }))
   },

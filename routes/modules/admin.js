@@ -11,7 +11,10 @@ router.get('/exchanges', adminController.getExchanges)
 router.post('/exchanges', adminController.postExchange)
 
 // 路由: 股票分類相關
+router.patch('/stockgroups/:id', adminController.patchStockGroup)
+router.delete('/stockgroups/:id', adminController.deleteStockGroup)
 router.get('/stockgroups', adminController.getStockGroups)
+router.post('/stockgroups', adminController.postStockGroup)
 
 // 路由: 股票資料相關
 router.get('/stocks', adminController.getStocks)
