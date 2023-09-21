@@ -1,6 +1,6 @@
 const { Exchange, StockGroup, Stock, TradeDate, HolidayType, Sequelize } = require('../models')
 const { Op } = require('sequelize')
-const { newDate } = require('../helpers/date-helpers')
+const { newDate, getYear } = require('../helpers/date-helpers')
 const date = new Date()
 
 const adminServices = {
@@ -283,6 +283,95 @@ const adminServices = {
     })
       .then(tradeDates => {
         return cb(null, { tradeDates })
+      })
+      .catch(err => cb(err))
+  },
+  postTradeDate: (req, cb) => {
+    const { calendarDate, isTrade, holidayType, description } = req.body
+    const dateCheck = new Date(calendarDate)
+
+    if (!calendarDate) throw new Error('不得為空白！')
+    if ((newDate(dateCheck).toString() === 'Invalid Date') || (getYear(dateCheck).toString().length !== 4)) throw new Error('請輸入日期格式資料！')
+    if (isTrade === 0 && (!holidayType || !description)) throw new Error('假日資訊不得為空白！')
+    if (isTrade === 1 && (holidayType || description)) throw new Error('交易日出現假日資訊！')
+    if (!(isTrade === 0 || isTrade === 1)) throw new Error('只能輸入是或否！')
+    if (description.includes(';') || description.includes('--')) throw new Error('出現無效字元！')
+    if (holidayType.length > 1) throw new Error('不得超過1個字元！')
+    if (description.length > 20) throw new Error('不得超過20個字元！')
+
+    return TradeDate.findOne({
+      where: { calendarDate: calendarDate },
+      raw: true
+    })
+      .then(tradeDate => {
+        console.log(tradeDate)
+        if (tradeDate) throw new Error('日期已建立！')
+        return TradeDate.create({
+          calendarDate: dateCheck,
+          isTrade,
+          holidayType,
+          description,
+          tradedayCnt: 0
+        })
+      })
+      .then(createTradeDate => {
+        return cb(null, { tradeDate: createTradeDate })
+      })
+      .catch(err => cb(err))
+  },
+  patchTradeDate: (req, cb) => {
+    const date = req.params.date
+    const { isTrade, holidayType, description } = req.body
+
+    if (isTrade === 0 && (!holidayType || !description)) throw new Error('假日資訊不得為空白！')
+    if (isTrade === 1 && (holidayType || description)) throw new Error('交易日出現假日資訊！')
+    if (!(isTrade === 0 || isTrade === 1)) throw new Error('只能輸入是或否！')
+    if (description.includes(';') || description.includes('--')) throw new Error('出現無效字元！')
+    if (holidayType.length > 1) throw new Error('不得超過1個字元！')
+    if (description.length > 20) throw new Error('不得超過20個字元！')
+
+    return TradeDate.findOne({
+      where: { calendarDate: date },
+      raw: true
+    })
+      .then(tradeDate => {
+        if (!tradeDate) {
+          const err = new Error('查無資料！')
+          err.status = 404
+          throw err
+        }
+        const patchTradeDate = { isTrade, holidayType, description }
+
+        if (isTrade === tradeDate.isTrade) delete patchTradeDate.isTrade
+        if (holidayType === tradeDate.holidayType) delete patchTradeDate.tradeCode
+        if (description === tradeDate.description) delete patchTradeDate.name
+        if (!Object.keys(patchTradeDate).length) throw new Error('沒有修改資料！')
+
+        return TradeDate.update(patchTradeDate, { where: { calendarDate: date } })
+      })
+      .then(() => {
+        return cb(null, { tradeDate: { calendarDate: date, isTrade, holidayType, description } })
+      })
+      .catch(err => cb(err))
+  },
+  deleteTradeDate: (req, cb) => {
+    const date = req.params.date
+
+    TradeDate.findOne({
+      where: { calendarDate: date },
+      raw: true
+    })
+      .then(tradeDate => {
+        if (!tradeDate) {
+          const err = new Error('查無資料！')
+          err.status = 404
+          throw err
+        }
+        TradeDate.destroy({ where: { calendarDate: date } })
+        return tradeDate
+      })
+      .then(deletedTradeDate => {
+        return cb(null, { tradeDate: deletedTradeDate })
       })
       .catch(err => cb(err))
   }

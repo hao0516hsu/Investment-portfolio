@@ -38,6 +38,15 @@ const adminController = {
   },
   getTradeDates: (req, res, next) => {
     adminServices.getTradeDates(req, (err, data) => err ? next(err) : res.json({ status: 'success', result: data }))
+  },
+  postTradeDate: (req, res, next) => {
+    adminServices.postTradeDate(req, (err, data) => err ? next(err) : res.json({ status: 'success', result: data }))
+  },
+  patchTradeDate: (req, res, next) => {
+    adminServices.patchTradeDate(req, (err, data) => err ? next(err) : res.json({ status: 'success', result: data }))
+  },
+  deleteTradeDate: (req, res, next) => {
+    adminServices.deleteTradeDate(req, (err, data) => err ? next(err) : res.json({ status: 'success', result: data }))
   }
 }
 

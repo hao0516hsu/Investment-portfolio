@@ -23,6 +23,9 @@ router.get('/stocks', adminController.getStocks)
 router.post('/stocks', adminController.postStock)
 
 // 路由: 交易日相關
+router.patch('/tradedates/:date', adminController.patchTradeDate)
+router.delete('/tradedates/:date', adminController.deleteTradeDate)
 router.get('/tradedates', adminController.getTradeDates)
+router.post('/tradedates', adminController.postTradeDate)
 
 module.exports = router
