@@ -1,6 +1,8 @@
 const express = require('express')
 const router = express.Router()
-// const passport = require('../config/passport')
+
+// 引用modules的路由
+const admin = require('./modules/admin')
 
 // controller
 const portfolioController = require('../controllers/portfolio-controller')
@@ -10,6 +12,9 @@ const userController = require('../controllers/user-controller')
 const { apiErrorHandler } = require('../middleware/error-handler')
 const { userSignIn, adminSignIn } = require('../middleware/login-handler')
 const { authenticated, authenticatedAdmin } = require('../middleware/api-auth')
+
+// 後台驗證
+router.use('/admin', authenticated, authenticatedAdmin, admin)
 
 // 路由：帳號登入(後台)
 router.post('/admin/signin', adminSignIn, userController.signIn)

@@ -1,4 +1,5 @@
 const databaseServices = require('../services/database-services')
+const TIMER = 8000
 
 const databaseController = {
   rawStockGroups: () => {
@@ -20,11 +21,11 @@ const databaseController = {
   },
   deriveToPrices: async () => {
     await databaseServices.deriveToPrices()
-    await databaseServices.nullPrices()
+    setTimeout(() => { databaseServices.nullPrices() }, TIMER)
   },
   deriveToAvgprices: dataDate => {
     databaseServices.deriveToAvgprices(dataDate)
-    setTimeout(() => { databaseServices.deriveToAvgpriceAcross(dataDate) }, 8000)
+    setTimeout(() => { databaseServices.deriveToAvgpriceAcross(dataDate) }, TIMER)
   },
   tradedayCnt: () => {
     databaseServices.tradedayCnt()
