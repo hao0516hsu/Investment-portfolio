@@ -10,7 +10,7 @@ const DATE_DATA = [
     description: '中華民國開國紀念日'
   }
 ]
-const HOLIDAY_DATA = require('../data/holidays.json').data
+const HOLIDAY_DATA = require('../data/seeds/holidays.json').data
 // 引入helpers
 const { newDate } = require('../helpers/date-helpers')
 // 預設建立2021-01-01以後的1080日(NDAYS)

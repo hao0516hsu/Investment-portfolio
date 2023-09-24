@@ -8,8 +8,10 @@ const portfolioServices = {
   getStock: (req, cb) => {
     const previousDay = new Date(new Date().setDate(date.getDate() - 10))
     const tradeCode = req.params.id
-    const startDate = newDate(previousDay)
-    const endDate = newDate(date)
+    const startDate = req.query.startDate || newDate(previousDay)
+    const endDate = req.query.endDate || newDate(date)
+
+    if (startDate > endDate) throw new Error('查詢起日應小於或等於查詢迄日！')
 
     Promise.all([
       AveragePriceAcross.findAll({
@@ -122,13 +124,23 @@ const portfolioServices = {
   },
   // 證券清單
   getStockLists: (req, cb) => {
+    const tradeCode = req.query.tradeCode.trim()
+    const LIMIT = Number(req.query.limit) || 10
+
+    if (tradeCode.length === 0) throw new Error('不得輸入空白！')
+    if (tradeCode.length > 7) throw new Error('不得超過7個字元！')
+    if (LIMIT.toString().length > 3) throw new Error('不得超過3個字元！')
+    if (tradeCode.includes(';') || tradeCode.includes('--') || tradeCode.includes('drop') || tradeCode.includes('delete')) throw new Error('出現無效字元！')
+    if (LIMIT === undefined) throw new Error('查詢筆數錯誤！')
+
     Stock.findAll({
       attributes: ['tradeCode', 'name'],
       where: {
-        isListed: 1
+        isListed: 1,
+        tradeCode: { [Op.like]: '%' + tradeCode + '%' }
       },
       raw: true,
-      limit: 10
+      limit: LIMIT
     })
       .then(stocks => {
         return cb(null, {

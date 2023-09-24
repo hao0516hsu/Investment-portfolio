@@ -13,11 +13,12 @@ const { apiErrorHandler } = require('../middleware/error-handler')
 const { userSignIn, adminSignIn } = require('../middleware/login-handler')
 const { authenticated, authenticatedAdmin } = require('../middleware/api-auth')
 
+// 路由：帳號登入(後台)
+router.post('/admin/signin', adminSignIn, userController.signIn)
+
 // 後台驗證
 router.use('/admin', authenticated, authenticatedAdmin, admin)
 
-// 路由：帳號登入(後台)
-router.post('/admin/signin', adminSignIn, userController.signIn)
 // 路由：註冊帳號
 router.post('/signup', userController.signUp)
 // 路由：帳號登入(前台)

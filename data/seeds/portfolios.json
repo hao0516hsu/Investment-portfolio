@@ -1,0 +1,60 @@
+{
+  "portfolio": [
+    {
+      "buy_date": "2022/7/1",
+      "buy_price": 452.5,
+      "buy_vol": 1000,
+      "user_id": 2,
+      "stock_id": 1187
+    },
+    {
+      "buy_date": "2022/9/12",
+      "buy_price": 485,
+      "buy_vol": 1000,
+      "user_id": 2,
+      "stock_id": 1187
+    },
+    {
+      "buy_date": "2023/1/17",
+      "buy_price": 499.5,
+      "buy_vol": 4000,
+      "user_id": 2,
+      "stock_id": 1187
+    },
+    {
+      "buy_date": "2022/7/4",
+      "buy_price": 57.9,
+      "buy_vol": 20000,
+      "user_id": 3,
+      "stock_id": 1800
+    },
+    {
+      "buy_date": "2022/7/1",
+      "buy_price": 64.45,
+      "buy_vol": 5000,
+      "user_id": 3,
+      "stock_id": 17
+    },
+    {
+      "buy_date": "2022/8/16",
+      "buy_price": 70.25,
+      "buy_vol": 5000,
+      "user_id": 3,
+      "stock_id": 17
+    },
+    {
+      "buy_date": "2022/10/27",
+      "buy_price": 56.9,
+      "buy_vol": 50000,
+      "user_id": 3,
+      "stock_id": 17
+    },
+    {
+      "buy_date": "2022/12/20",
+      "buy_price": 62.5,
+      "buy_vol": 10000,
+      "user_id": 3,
+      "stock_id": 17
+    }
+  ]
+}

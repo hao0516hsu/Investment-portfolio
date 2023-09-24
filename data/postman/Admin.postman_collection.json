@@ -1,0 +1,644 @@
+{
+	"info": {
+		"_postman_id": "a2dcb277-eb57-483a-9770-fb5e5a6daef9",
+		"name": "Admin",
+		"description": "後台頁面。\n\n必須具有管理員身分才能執行。",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29108575",
+		"_collection_link": "https://solar-escape-832951-1.postman.co/workspace/Investment-portfolio~30f4e860-27da-4728-b631-03ff33e9f8fa/collection/29108575-a2dcb277-eb57-483a-9770-fb5e5a6daef9?action=share&source=collection_link&creator=29108575"
+	},
+	"item": [
+		{
+			"name": "api/admin/exchanges",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token_admin}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/admin/exchanges",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"exchanges"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/admin/exchanges",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token_admin}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \r\n    \"abbrev\": \"Test\", \r\n    \"nameChn\": \"測試\", \r\n    \"nameEng\": \"Test\", \r\n    \"nameJpn\": \"Test\"\r\n }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/admin/exchanges",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"exchanges"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/admin/exchanges/:id",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token_admin}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \r\n    \"abbrev\": \"Test\", \r\n    \"nameChn\": \"測試\", \r\n    \"nameEng\": \"Test\", \r\n    \"nameJpn\": \"Test\"\r\n }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/admin/exchanges/:id",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"exchanges",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "6"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/admin/exchanges/:id",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token_admin}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/admin/exchanges/:id",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"exchanges",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "6"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/admin/stockgroups",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token_admin}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/admin/stockgroups",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"stockgroups"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/admin/stockgroups",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token_admin}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \r\n    \"groupName\" : \"TEST\", \r\n    \"groupCode\": \"TTTT\", \r\n    \"exchangeId\": 1, \r\n    \"isTarget\" : 0\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/admin/stockgroups",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"stockgroups"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/admin/stockgroups/:id",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token_admin}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \r\n    \"groupName\" : \"TEST\", \r\n    \"groupCode\": \"TesT\", \r\n    \"exchangeId\": 1, \r\n    \"isTarget\" : 0\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/admin/stockgroups/:id",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"stockgroups",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "114"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/admin/stockgroups/:id",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token_admin}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/admin/stockgroups/:id",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"stockgroups",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "115"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/admin/stocks",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token_admin}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/admin/stocks",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"stocks"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/admin/stocks",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token_admin}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"tradeCode\": \"0001\", \r\n    \"name\": \"test\", \r\n    \"isListed\": 0, \r\n    \"groupId\": 1\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/admin/stocks",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"stocks"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/admin/stocks/:id",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token_admin}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"tradeCode\": \"0001\", \r\n    \"name\": \"test123\", \r\n    \"isListed\": 0, \r\n    \"groupId\": 1\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/admin/stocks/:id",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"stocks",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "3940"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/admin/stocks/:id",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token_admin}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/admin/stocks/:id",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"stocks",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "3941"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/admin/tradedates",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token_admin}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/admin/tradedates?startDate=2023/8/1&endDate=2023/8/5",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"tradedates"
+					],
+					"query": [
+						{
+							"key": "startDate",
+							"value": "2023/8/1"
+						},
+						{
+							"key": "endDate",
+							"value": "2023/8/5"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/admin/tradedates",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token_admin}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \r\n    \"calendarDate\": \"2024-01-02\", \r\n    \"isTrade\": 1, \r\n    \"holidayType\": \"\", \r\n    \"description\": \"\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/admin/tradedates",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"tradedates"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/admin/tradedates/:date",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token_admin}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \r\n    \"isTrade\": 1, \r\n    \"holidayType\": \"\", \r\n    \"description\": \"\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/admin/tradedates/:date",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"tradedates",
+						":date"
+					],
+					"variable": [
+						{
+							"key": "date",
+							"value": "2023-01-02"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/admin/tradedates/:date",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token_admin}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/admin/tradedates/:date",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"admin",
+						"tradedates",
+						":date"
+					],
+					"variable": [
+						{
+							"key": "date",
+							"value": "2023-1-2"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token_admin}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

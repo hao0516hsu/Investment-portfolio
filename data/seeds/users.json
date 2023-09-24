@@ -1,0 +1,28 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "account": "root",
+      "name": "root",
+      "email": "root@example.com",
+      "password": "12345678",
+      "is_admin": true
+    },
+    {
+      "id": 2,
+      "account": "test_user1",
+      "name": "test_user1",
+      "email": "user1@example.com",
+      "password": "12345678",
+      "is_admin": false
+    },
+    {
+      "id": 3,
+      "account": "test_user2",
+      "name": "test_user2",
+      "email": "user2@example.com",
+      "password": "12345678",
+      "is_admin": false
+    }
+  ]
+}

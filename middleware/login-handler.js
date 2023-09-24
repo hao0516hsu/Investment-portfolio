@@ -20,6 +20,7 @@ const userSignIn = async (req, res, next) => {
 }
 
 const adminSignIn = async (req, res, next) => {
+  console.log(req)
   try {
     const { account, password } = req.body
     if (!account || !password) throw new Error('帳號與密碼皆為必填！')

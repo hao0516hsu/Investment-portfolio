@@ -6,7 +6,12 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "stock": "node database/stocks.js",
+    "rawPrice": "node database/raw-prices.js",
+    "price": "node database/prices.js",
+    "avgPrice": "node database/average-prices.js",
+    "tradeday": "node database/tradedays.js"
   },
   "keywords": [],
   "author": "",

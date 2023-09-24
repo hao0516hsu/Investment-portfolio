@@ -1,0 +1,117 @@
+{
+	"info": {
+		"_postman_id": "77f444c5-0d07-40d0-91cc-e6ee460154c9",
+		"name": "Home",
+		"description": "主畫面。\n\n本區塊不必登入驗證。",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29108575",
+		"_collection_link": "https://solar-escape-832951-1.postman.co/workspace/Investment-portfolio~30f4e860-27da-4728-b631-03ff33e9f8fa/collection/29108575-77f444c5-0d07-40d0-91cc-e6ee460154c9?action=share&source=collection_link&creator=29108575"
+	},
+	"item": [
+		{
+			"name": "api/stocks",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/stocks",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"stocks"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/stocks/:id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{base_url}}/api/stocks/:id?startDate=2023/9/1&endDate=2023/9/5",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"stocks",
+						":id"
+					],
+					"query": [
+						{
+							"key": "startDate",
+							"value": "2023/9/1"
+						},
+						{
+							"key": "endDate",
+							"value": "2023/9/5"
+						}
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "006208"
+						}
+					]
+				},
+				"description": "This is a GET request and it is used to \"get\" data from an endpoint. There is no request body for a GET request, but you can use query parameters to help specify the resource you want data on (e.g., in this request, we have `id=1`).\n\nA successful GET response will have a `200 OK` status, and should include some kind of response body - for example, HTML web content or JSON data."
+			},
+			"response": []
+		},
+		{
+			"name": "api/stocklist",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/stocklist?tradeCode=23&limit=500",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"stocklist"
+					],
+					"query": [
+						{
+							"key": "tradeCode",
+							"value": "23"
+						},
+						{
+							"key": "limit",
+							"value": "500"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
